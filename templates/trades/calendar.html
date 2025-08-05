@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %}Trade Calendar - Trade Journal{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 sidebar d-none d-lg-block">
+            <ul class="sidebar-nav">
+                <li><a href="{% url 'dashboard' %}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a></li>
+                <li><a href="{% url 'trade_list' %}">
+                    <i class="bi bi-list"></i> Trades
+                </a></li>
+                <li><a href="{% url 'trade_calendar' %}" class="active">
+                    <i class="bi bi-calendar3"></i> Calendar
+                </a></li>
+                <li><a href="{% url 'trade_create' %}">
+                    <i class="bi bi-plus-circle"></i> Add Trade
+                </a></li>
+                <li><a href="{% url 'import_trades_csv' %}">
+                    <i class="bi bi-upload"></i> Import CSV
+                </a></li>
+                <li><a href="{% url 'export_trades_csv' %}">
+                    <i class="bi bi-download"></i> Export
+                </a></li>
+                <li><a href="{% url 'profile' %}">
+                    <i class="bi bi-person"></i> Profile
+                </a></li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10">
+            <div class="p-4">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="text-gradient mb-1">
+                            <i class="bi bi-calendar3"></i> Trade Calendar
+                        </h2>
+                        <p class="text-secondary mb-0">View your trades by date</p>
+                    </div>
+                    <div>
+                        <a href="{% url 'trade_create' %}" class="btn btn-primary hover-lift">
+                            <i class="bi bi-plus-circle"></i> Add Trade
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Calendar Navigation -->
+                <div class="card hover-glow mb-4">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="?year={{ prev_year }}&month={{ prev_month }}" class="btn btn-outline-secondary btn-sm hover-lift">
+                                <i class="bi bi-chevron-left"></i> Previous
+                            </a>
+                            <h5 class="mb-0">{{ current_month }} {{ current_year }}</h5>
+                            <a href="?year={{ next_year }}&month={{ next_month }}" class="btn btn-outline-secondary btn-sm hover-lift">
+                                Next <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-bordered mb-0" style="table-layout: fixed;">
+                                <thead>
+                                    <tr class="text-center">
+                                        <th style="width: 14.28%;">Sunday</th>
+                                        <th style="width: 14.28%;">Monday</th>
+                                        <th style="width: 14.28%;">Tuesday</th>
+                                        <th style="width: 14.28%;">Wednesday</th>
+                                        <th style="width: 14.28%;">Thursday</th>
+                                        <th style="width: 14.28%;">Friday</th>
+                                        <th style="width: 14.28%;">Saturday</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for week in calendar_data %}
+                                        <tr>
+                                            {% for day_data in week %}
+                                                <td class="p-2" style="height: 120px; vertical-align: top;">
+                                                    {% if day_data.day != 0 %}
+                                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                                            <span class="fw-bold">{{ day_data.day }}</span>
+                                                            {% if day_data.profit != 0 %}
+                                                                <small class="{% if day_data.profit > 0 %}text-success{% else %}text-danger{% endif %}">
+                                                                    ${{ day_data.profit|floatformat:0 }}
+                                                                </small>
+                                                            {% endif %}
+                                                        </div>
+                                                        {% for trade in day_data.trades %}
+                                                            <div class="mb-1">
+                                                                <a href="{% url 'trade_detail' trade.pk %}" class="text-decoration-none">
+                                                                    <div class="glass-light p-1 rounded-2 hover-lift" style="font-size: 10px;">
+                                                                        <div class="d-flex justify-content-between align-items-center">
+                                                                            <span class="badge {% if trade.trade_type == 'BUY' %}bg-success{% else %}bg-danger{% endif %}" style="font-size: 8px;">
+                                                                                {{ trade.trade_type }}
+                                                                            </span>
+                                                                            <span class="text-muted">{{ trade.asset }}</span>
+                                                                        </div>
+                                                                        {% if trade.profit_loss %}
+                                                                            <div class="text-center {% if trade.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}" style="font-size: 9px;">
+                                                                                ${{ trade.profit_loss|floatformat:0 }}
+                                                                            </div>
+                                                                        {% endif %}
+                                                                    </div>
+                                                                </a>
+                                                            </div>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                </td>
+                                            {% endfor %}
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Month Summary -->
+                {% if month_trades %}
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="card hover-glow">
+                                <div class="card-body text-center">
+                                    <div class="stat-value">{{ month_trades.count }}</div>
+                                    <div class="stat-label">Total Trades</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card hover-glow">
+                                <div class="card-body text-center">
+                                    {% with winning_trades=month_trades|length %}
+                                        {% with total_winning=0 %}
+                                            {% for trade in month_trades %}
+                                                {% if trade.profit_loss and trade.profit_loss > 0 %}
+                                                    {% with total_winning=total_winning|add:1 %}{% endwith %}
+                                                {% endif %}
+                                            {% endfor %}
+                                            <div class="stat-value">
+                                                {% if month_trades.count > 0 %}
+                                                    {% widthratio total_winning month_trades.count 100 %}%
+                                                {% else %}
+                                                    0%
+                                                {% endif %}
+                                            </div>
+                                        {% endwith %}
+                                    {% endwith %}
+                                    <div class="stat-label">Win Rate</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card hover-glow">
+                                <div class="card-body text-center">
+                                    {% with month_pl=0 %}
+                                        {% for trade in month_trades %}
+                                            {% if trade.profit_loss %}
+                                                {% with month_pl=month_pl|add:trade.profit_loss %}{% endwith %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        <div class="stat-value {% if month_pl >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            ${{ month_pl|floatformat:2 }}
+                                        </div>
+                                    {% endwith %}
+                                    <div class="stat-label">Monthly P&L</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

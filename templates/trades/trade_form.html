@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - Trade Journal{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 sidebar d-none d-lg-block">
+            <ul class="sidebar-nav">
+                <li><a href="{% url 'dashboard' %}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a></li>
+                <li><a href="{% url 'trade_list' %}">
+                    <i class="bi bi-list"></i> Trades
+                </a></li>
+                <li><a href="{% url 'trade_create' %}" class="active">
+                    <i class="bi bi-plus-circle"></i> Add Trade
+                </a></li>
+                <li><a href="{% url 'export_trades_csv' %}">
+                    <i class="bi bi-download"></i> Export
+                </a></li>
+                <li><a href="{% url 'profile' %}">
+                    <i class="bi bi-person"></i> Profile
+                </a></li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10">
+            <div class="p-4">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card hover-glow">
+                        <div class="card-header">
+                            <div class="d-flex align-items-center">
+                                <div class="glass-light p-2 rounded-circle me-3">
+                                    <i class="bi bi-{% if trade %}pencil{% else %}plus-circle{% endif %} display-6"></i>
+                                </div>
+                                <div>
+                                    <h4 class="mb-0">{{ title }}</h4>
+                                    <p class="text-secondary mb-0">{% if trade %}Update trade information{% else %}Add a new trade to your journal{% endif %}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="glass-light p-4 rounded-4">
+                                <form method="post" enctype="multipart/form-data">
+                                    {% csrf_token %}
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.open_date.id_for_label }}" class="form-label">
+                                                <i class="bi bi-calendar"></i> Open Date & Time
+                                            </label>
+                                            {{ form.open_date }}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.close_date.id_for_label }}" class="form-label">
+                                                <i class="bi bi-calendar-check"></i> Close Date & Time
+                                            </label>
+                                            {{ form.close_date }}
+                                            <div class="form-text">Leave empty for open trades</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-12 mb-3">
+                                            <label for="{{ form.asset.id_for_label }}" class="form-label">
+                                                <i class="bi bi-graph-up"></i> Currency Pair
+                                            </label>
+                                            {{ form.asset }}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.trade_type.id_for_label }}" class="form-label">
+                                                <i class="bi bi-arrow-up-down"></i> Trade Type
+                                            </label>
+                                            {{ form.trade_type }}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.position_size.id_for_label }}" class="form-label">
+                                                <i class="bi bi-calculator"></i> Position Size
+                                            </label>
+                                            {{ form.position_size }}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.entry_price.id_for_label }}" class="form-label">
+                                                <i class="bi bi-box-arrow-in-right"></i> Entry Price
+                                            </label>
+                                            {{ form.entry_price }}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.exit_price.id_for_label }}" class="form-label">
+                                                <i class="bi bi-box-arrow-right"></i> Exit Price
+                                            </label>
+                                            {{ form.exit_price }}
+                                            <div class="form-text">Leave empty for open trades</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.stop_loss.id_for_label }}" class="form-label">
+                                                <i class="bi bi-shield-x"></i> Stop Loss
+                                            </label>
+                                            {{ form.stop_loss }}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.take_profit.id_for_label }}" class="form-label">
+                                                <i class="bi bi-shield-check"></i> Take Profit
+                                            </label>
+                                            {{ form.take_profit }}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-4 mb-3">
+                                            <label for="{{ form.commission.id_for_label }}" class="form-label">
+                                                <i class="bi bi-receipt"></i> Commission
+                                            </label>
+                                            {{ form.commission }}
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="{{ form.swap.id_for_label }}" class="form-label">
+                                                <i class="bi bi-arrow-left-right"></i> Swap
+                                            </label>
+                                            {{ form.swap }}
+                                        </div>
+                                        <div class="col-md-4 mb-3">
+                                            <label for="{{ form.profit.id_for_label }}" class="form-label">
+                                                <i class="bi bi-currency-dollar"></i> Profit/Loss
+                                            </label>
+                                            {{ form.profit }}
+                                            <div class="form-text">Manual P&L entry</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.tags.id_for_label }}" class="form-label">
+                                                <i class="bi bi-tags"></i> Tags
+                                            </label>
+                                            {{ form.tags }}
+                                            <div class="form-text">Comma-separated (e.g., news trade, breakout)</div>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="{{ form.emotion.id_for_label }}" class="form-label">
+                                                <i class="bi bi-emoji-smile"></i> Emotion
+                                            </label>
+                                            {{ form.emotion }}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="{{ form.screenshot.id_for_label }}" class="form-label">
+                                            <i class="bi bi-camera"></i> Screenshot
+                                        </label>
+                                        {{ form.screenshot }}
+                                        {% if trade and trade.screenshot %}
+                                            <div class="mt-2">
+                                                <div class="glass-medium p-3 rounded-3">
+                                                    <img src="{{ trade.screenshot.url }}" alt="Current screenshot" class="img-fluid rounded" style="max-height: 200px;">
+                                                    <div class="form-text mt-2">Current screenshot (upload new to replace)</div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="{{ form.notes.id_for_label }}" class="form-label">
+                                            <i class="bi bi-journal-text"></i> Notes
+                                        </label>
+                                        {{ form.notes }}
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary hover-lift">
+                                            <i class="bi bi-check-circle"></i> 
+                                            {% if trade %}Update Trade{% else %}Save Trade{% endif %}
+                                        </button>
+                                        <a href="{% if trade %}{% url 'trade_detail' trade.pk %}{% else %}{% url 'trade_list' %}{% endif %}" class="btn btn-secondary hover-lift">
+                                            <i class="bi bi-x-circle"></i> Cancel
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

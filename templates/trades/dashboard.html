@@ -1,0 +1,552 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Trade Journal{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 sidebar d-none d-lg-block">
+            <ul class="sidebar-nav">
+                <li><a href="{% url 'dashboard' %}" class="active">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a></li>
+                <li><a href="{% url 'trade_list' %}">
+                    <i class="bi bi-list"></i> Trades
+                </a></li>
+                <li><a href="{% url 'trade_create' %}">
+                    <i class="bi bi-plus-circle"></i> Add Trade
+                </a></li>
+                <li><a href="{% url 'import_trades_csv' %}">
+                    <i class="bi bi-upload"></i> Import CSV
+                </a></li>
+                <li><a href="{% url 'export_trades_csv' %}">
+                    <i class="bi bi-download"></i> Export
+                </a></li>
+                <li><a href="{% url 'profile' %}">
+                    <i class="bi bi-person"></i> Profile
+                </a></li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10">
+            <div class="p-4">
+                <!-- Welcome Section -->
+                <div class="welcome-section fade-in-up">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h4 class="mb-2">Welcome back, {{ user.first_name|default:user.username }}</h4>
+                            <p class="text-secondary mb-0 small">Trading performance overview</p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{% url 'trade_create' %}" class="btn btn-primary btn-sm hover-lift">
+                                    <i class="bi bi-plus-circle"></i> Add
+                                </a>
+                                <a href="{% url 'import_trades_csv' %}" class="btn btn-outline-primary btn-sm hover-lift">
+                                    <i class="bi bi-upload"></i> Import
+                                </a>
+                                <a href="{% url 'export_trades_csv' %}" class="btn btn-outline-primary btn-sm hover-lift">
+                                    <i class="bi bi-download"></i> Export
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card fade-in-up hover-glow">
+                            <div class="card-body text-center">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="stat-value">{{ total_trades }}</div>
+                                        <div class="stat-label">Trades</div>
+                                    </div>
+                                    <i class="bi bi-list-ol stat-icon"></i>
+                                </div>
+                                <div class="progress" style="height: 2px; background: rgba(0,0,0,0.1);">
+                                    <div class="progress-bar" style="width: 100%; background: #333333;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card fade-in-up hover-glow">
+                            <div class="card-body text-center">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="stat-value">{{ win_rate }}%</div>
+                                        <div class="stat-label">Win Rate</div>
+                                    </div>
+                                    <i class="bi bi-percent stat-icon"></i>
+                                </div>
+                                <div class="progress" style="height: 2px; background: rgba(0,0,0,0.1);">
+                                    <div class="progress-bar" style="width: {{ win_rate }}%; background: #666666;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card fade-in-up hover-glow">
+                            <div class="card-body text-center">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="stat-value {% if total_pl >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                            ${{ total_pl|floatformat:2 }}
+                                        </div>
+                                        <div class="stat-label">P&L</div>
+                                    </div>
+                                    <i class="bi bi-currency-dollar stat-icon"></i>
+                                </div>
+                                <div class="progress" style="height: 2px; background: rgba(0,0,0,0.1);">
+                                    <div class="progress-bar" style="width: 50%; background: #666666;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-6 mb-3">
+                        <div class="card fade-in-up hover-glow">
+                            <div class="card-body text-center">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <div>
+                                        <div class="stat-value">{{ avg_rr }}</div>
+                                        <div class="stat-label">Risk:Reward</div>
+                                    </div>
+                                    <i class="bi bi-graph-up stat-icon"></i>
+                                </div>
+                                <div class="progress" style="height: 2px; background: rgba(0,0,0,0.1);">
+                                    <div class="progress-bar" style="width: 60%; background: #666666;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <!-- Monthly Trade Chart -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="card fade-in-up hover-glow">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-bar-chart"></i> Activity
+                                    </h6>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-secondary active" id="monthlyBtn" onclick="toggleChart('monthly')">Month</button>
+                                        <button class="btn btn-outline-secondary" id="weeklyBtn" onclick="toggleChart('weekly')">Week</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="activityChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Overview -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card fade-in-up hover-glow">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-trophy"></i> Performance
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                {% if best_trade %}
+                                    <div class="mb-4">
+                                        <div class="glass-light p-3 rounded-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="text-secondary small">Best</span>
+                                                <span class="text-success small">+${{ best_trade.profit_loss|floatformat:2 }}</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span class="small">{{ best_trade.asset }}</span>
+                                                <small class="text-muted">{{ best_trade.open_date|date:"M d" }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if worst_trade %}
+                                    <div class="mb-4">
+                                        <div class="glass-light p-3 rounded-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="text-secondary small">Worst</span>
+                                                <span class="text-danger small">${{ worst_trade.profit_loss|floatformat:2 }}</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between">
+                                                <span class="small">{{ worst_trade.asset }}</span>
+                                                <small class="text-muted">{{ worst_trade.open_date|date:"M d" }}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="mb-3">
+                                    <div class="glass-light p-3 rounded-3">
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span class="text-secondary small">This Month</span>
+                                            <span class="small">{{ total_trades }} trades</span>
+                                        </div>
+                                        <div class="progress" style="height: 4px; background: rgba(0,0,0,0.1);">
+                                            <div class="progress-bar" style="width: {{ win_rate }}%; background: #666666;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {% if not best_trade and not worst_trade %}
+                                    <div class="text-center py-4">
+                                        <div class="glass-light p-4 rounded-3">
+                                            <i class="bi bi-graph-up text-muted mb-3" style="font-size: 2rem;"></i>
+                                            <p class="text-muted small">No completed trades</p>
+                                            <a href="{% url 'trade_create' %}" class="btn btn-primary btn-sm hover-lift">Add Trade</a>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- P&L Trend Chart -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card fade-in-up hover-glow">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-graph-up-arrow"></i> P&L Trend
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container" style="height: 200px;">
+                                    <canvas id="plChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Trades -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card fade-in-up hover-glow">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-clock-history"></i> Recent
+                                    </h6>
+                                    <a href="{% url 'trade_list' %}" class="btn btn-outline-primary btn-sm hover-lift">All</a>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                {% if recent_trades %}
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Asset</th>
+                                                    <th>Type</th>
+                                                    <th>Entry</th>
+                                                    <th>Exit</th>
+                                                    <th>P&L</th>
+                                                    <th>Date</th>
+                                                    <th>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for trade in recent_trades %}
+                                                    <tr>
+                                                        <td>
+                                                            <strong>{{ trade.asset }}</strong>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge {% if trade.trade_type == 'BUY' %}bg-success{% else %}bg-danger{% endif %}">
+                                                                {{ trade.trade_type }}
+                                                            </span>
+                                                        </td>
+                                                        <td>${{ trade.entry_price }}</td>
+                                                        <td>
+                                                            {% if trade.exit_price %}
+                                                                ${{ trade.exit_price }}
+                                                            {% else %}
+                                                                <span class="text-muted">Open</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            {% if trade.profit_loss %}
+                                                                <span class="{% if trade.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                                    ${{ trade.profit_loss|floatformat:2 }}
+                                                                </span>
+                                                            {% else %}
+                                                                <span class="text-muted">-</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td>
+                                                            <small class="text-muted">{{ trade.open_date|date:"M d, H:i" }}</small>
+                                                        </td>
+                                                        <td>
+                                                            <div class="btn-group btn-group-sm">
+                                                                <a href="{% url 'trade_detail' trade.pk %}" class="btn btn-outline-primary hover-lift">
+                                                                    <i class="bi bi-eye"></i>
+                                                                </a>
+                                                                <a href="{% url 'trade_update' trade.pk %}" class="btn btn-outline-warning hover-lift">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </a>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <div class="glass-medium p-5 rounded-4">
+                                            <i class="bi bi-journal-x text-muted mb-3" style="font-size: 2rem;"></i>
+                                            <p class="text-muted mb-3">No trades recorded</p>
+                                            <p class="text-secondary mb-4 small">Add your first trade to get started</p>
+                                            <a href="{% url 'trade_create' %}" class="btn btn-primary hover-lift">
+                                                <i class="bi bi-plus-circle"></i> Add Trade
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if Chart.js is loaded
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js is not loaded. Please include Chart.js library.');
+            return;
+        }
+
+        // Chart.js default configuration for glass theme
+        Chart.defaults.color = '#666666';
+        Chart.defaults.borderColor = 'rgba(0, 0, 0, 0.1)';
+        Chart.defaults.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+        
+        // Get data from Django context variables
+        const monthlyData = {{ monthly_data|safe|default:"[]" }};
+        const weeklyData = {{ weekly_data|safe|default:"[]" }};
+        const monthlyPlData = {{ monthly_pl_data|safe|default:"[]" }};
+        
+        // Validate data
+        if (!Array.isArray(monthlyData) || !Array.isArray(weeklyData) || !Array.isArray(monthlyPlData)) {
+            console.error('Chart data is not in expected format');
+            return;
+        }
+        
+        // Activity Chart
+        const activityCtx = document.getElementById('activityChart');
+        if (!activityCtx) {
+            console.error('Activity chart canvas not found');
+            return;
+        }
+        
+        let activityChart = new Chart(activityCtx, {
+            type: 'bar',
+            data: {
+                labels: monthlyData.length > 0 ? monthlyData.map(item => item.month || '') : ['No Data'],
+                datasets: [{
+                    label: 'Trades',
+                    data: monthlyData.length > 0 ? monthlyData.map(item => item.count || 0) : [0],
+                    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+                    borderColor: '#333333',
+                    borderWidth: 1,
+                    borderRadius: 8,
+                    borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            color: '#666666',
+                            font: {
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#666666',
+                            font: {
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+        
+        // P&L Trend Chart
+        const plCtx = document.getElementById('plChart');
+        if (!plCtx) {
+            console.error('P&L chart canvas not found');
+            return;
+        }
+        
+        // Calculate cumulative P&L
+        let cumulativePL = [];
+        let runningTotal = 0;
+        
+        if (monthlyPlData.length > 0) {
+            monthlyPlData.forEach(pl => {
+                runningTotal += (parseFloat(pl) || 0);
+                cumulativePL.push(runningTotal);
+            });
+        } else {
+            cumulativePL = [0];
+        }
+        
+        const plChart = new Chart(plCtx, {
+            type: 'line',
+            data: {
+                labels: monthlyData.length > 0 ? monthlyData.map(item => item.month || '') : ['No Data'],
+                datasets: [{
+                    label: 'Cumulative P&L',
+                    data: cumulativePL,
+                    borderColor: '#333333',
+                    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#333333',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1,
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            color: '#666666',
+                            font: {
+                                size: 10
+                            },
+                            callback: function(value) {
+                                return '$' + (parseFloat(value) || 0).toFixed(0);
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#666666',
+                            font: {
+                                size: 10
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+        
+        // Toggle chart function
+        window.toggleChart = function(type) {
+            if (!activityChart) {
+                console.error('Activity chart not initialized');
+                return;
+            }
+            
+            // Update button states
+            const monthlyBtn = document.getElementById('monthlyBtn');
+            const weeklyBtn = document.getElementById('weeklyBtn');
+            
+            if (!monthlyBtn || !weeklyBtn) {
+                console.error('Chart toggle buttons not found');
+                return;
+            }
+            
+            monthlyBtn.classList.remove('active');
+            weeklyBtn.classList.remove('active');
+            
+            if (type === 'monthly') {
+                monthlyBtn.classList.add('active');
+                activityChart.data.labels = monthlyData.length > 0 ? monthlyData.map(item => item.month || '') : ['No Data'];
+                activityChart.data.datasets[0].data = monthlyData.length > 0 ? monthlyData.map(item => item.count || 0) : [0];
+            } else {
+                weeklyBtn.classList.add('active');
+                activityChart.data.labels = weeklyData.length > 0 ? weeklyData.map(item => item.week || '') : ['No Data'];
+                activityChart.data.datasets[0].data = weeklyData.length > 0 ? weeklyData.map(item => item.count || 0) : [0];
+            }
+            
+            activityChart.update('none'); // Use 'none' for instant update without animation
+        };
+        
+        // Add fade-in animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+        
+        document.querySelectorAll('.fade-in-up').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(20px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,238 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Import CSV - Trade Journal{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 sidebar d-none d-lg-block">
+            <ul class="sidebar-nav">
+                <li><a href="{% url 'dashboard' %}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a></li>
+                <li><a href="{% url 'trade_list' %}">
+                    <i class="bi bi-list"></i> Trades
+                </a></li>
+                <li><a href="{% url 'trade_create' %}">
+                    <i class="bi bi-plus-circle"></i> Add Trade
+                </a></li>
+                <li><a href="{% url 'import_trades_csv' %}" class="active">
+                    <i class="bi bi-upload"></i> Import CSV
+                </a></li>
+                <li><a href="{% url 'export_trades_csv' %}">
+                    <i class="bi bi-download"></i> Export
+                </a></li>
+                <li><a href="{% url 'profile' %}">
+                    <i class="bi bi-person"></i> Profile
+                </a></li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10">
+            <div class="p-3">
+                <div class="col-lg-8 mx-auto">
+                    <div class="card hover-glow">
+                        <div class="card-header">
+                            <div class="d-flex align-items-center">
+                                <div class="glass-light p-2 rounded-circle me-3">
+                                    <i class="bi bi-upload display-6"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-0">Import Trades from CSV</h5>
+                                    <p class="text-secondary mb-0 small">Upload your trading data file</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Instructions -->
+                            <div class="glass-light p-3 rounded-3 mb-3">
+                                <h6 class="mb-2">
+                                    <i class="bi bi-info-circle"></i> CSV Format Requirements
+                                </h6>
+                                <div class="small text-secondary">
+                                    <p class="mb-2">Your CSV file should contain the following columns:</p>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <ul class="mb-0 small">
+                                                <li><strong>Symbol</strong> - Asset name (e.g., GBPJPY)</li>
+                                                <li><strong>Type</strong> - Buy or Sell</li>
+                                                <li><strong>Open Date</strong> - Entry date/time</li>
+                                                <li><strong>Open</strong> - Entry price</li>
+                                                <li><strong>Closed Date</strong> - Exit date/time (optional)</li>
+                                                <li><strong>Closed</strong> - Exit price (optional)</li>
+                                            </ul>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <ul class="mb-0 small">
+                                                <li><strong>TP</strong> - Take Profit level (optional)</li>
+                                                <li><strong>SL</strong> - Stop Loss level (optional)</li>
+                                                <li><strong>Lots</strong> - Position size</li>
+                                                <li><strong>Commission</strong> - Trading fees (optional)</li>
+                                                <li><strong>Profit</strong> - P&L amount (optional)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Sample Format -->
+                            <div class="glass-medium p-3 rounded-3 mb-3">
+                                <h6 class="mb-2">
+                                    <i class="bi bi-file-earmark-spreadsheet"></i> Sample CSV Format
+                                </h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm small">
+                                        <thead>
+                                            <tr>
+                                                <th>Symbol</th>
+                                                <th>Type</th>
+                                                <th>Open Date</th>
+                                                <th>Open</th>
+                                                <th>Closed Date</th>
+                                                <th>Closed</th>
+                                                <th>TP</th>
+                                                <th>SL</th>
+                                                <th>Lots</th>
+                                                <th>Profit</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>GBPJPY</td>
+                                                <td>Buy</td>
+                                                <td>Jul 22, 2025 2:50 PM</td>
+                                                <td>198.967</td>
+                                                <td>Jul 22, 2025 2:55 PM</td>
+                                                <td>199.01</td>
+                                                <td>199.013</td>
+                                                <td></td>
+                                                <td>0.61</td>
+                                                <td>+$14.73</td>
+                                            </tr>
+                                            <tr>
+                                                <td>GBPUSD</td>
+                                                <td>Sell</td>
+                                                <td>Jul 21, 2025 7:51 PM</td>
+                                                <td>1.34824</td>
+                                                <td>Jul 21, 2025 7:56 PM</td>
+                                                <td>1.34871</td>
+                                                <td></td>
+                                                <td></td>
+                                                <td>0.16</td>
+                                                <td>-$8.32</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Upload Form -->
+                            <div class="glass-light p-3 rounded-3">
+                                <form method="post" enctype="multipart/form-data" id="csvUploadForm">
+                                    {% csrf_token %}
+                                    
+                                    <div class="mb-3">
+                                        <label for="{{ form.csv_file.id_for_label }}" class="form-label small">
+                                            <i class="bi bi-file-earmark-arrow-up"></i> Select CSV File
+                                        </label>
+                                        {{ form.csv_file }}
+                                        {% if form.csv_file.help_text %}
+                                            <div class="form-text small">{{ form.csv_file.help_text }}</div>
+                                        {% endif %}
+                                        {% if form.csv_file.errors %}
+                                            <div class="text-danger small">{{ form.csv_file.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <!-- File Preview -->
+                                    <div id="filePreview" class="glass-medium p-3 rounded-3 mb-3" style="display: none;">
+                                        <h6 class="mb-2 small">
+                                            <i class="bi bi-eye"></i> File Preview
+                                        </h6>
+                                        <div id="previewContent" class="small"></div>
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-primary btn-sm hover-lift" id="uploadBtn">
+                                            <i class="bi bi-upload"></i> Import Trades
+                                        </button>
+                                        <a href="{% url 'trade_list' %}" class="btn btn-secondary btn-sm hover-lift">
+                                            <i class="bi bi-x-circle"></i> Cancel
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
+                            
+                            <!-- Warning -->
+                            <div class="glass-light p-3 rounded-3 mt-3">
+                                <div class="d-flex align-items-start">
+                                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                                    <div class="small">
+                                        <strong>Important Notes:</strong>
+                                        <ul class="mb-0 mt-1">
+                                            <li>Maximum file size: 5MB</li>
+                                            <li>Duplicate trades may be created if you import the same file multiple times</li>
+                                            <li>All imported trades will be tagged as "imported"</li>
+                                            <li>Date formats supported: "Jul 22, 2025 2:50 PM", "07/22/2025 14:50", etc.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('csvFile').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('filePreview');
+    const previewContent = document.getElementById('previewContent');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    if (file) {
+        // Show file info
+        previewContent.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>File:</strong> ${file.name}<br>
+                    <strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB<br>
+                    <strong>Type:</strong> ${file.type || 'text/csv'}
+                </div>
+                <i class="bi bi-file-earmark-check text-success" style="font-size: 2rem;"></i>
+            </div>
+        `;
+        preview.style.display = 'block';
+        uploadBtn.disabled = false;
+        
+        // Validate file
+        if (!file.name.toLowerCase().endsWith('.csv')) {
+            previewContent.innerHTML += '<div class="text-danger mt-2"><i class="bi bi-exclamation-triangle"></i> Warning: File should have .csv extension</div>';
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+            previewContent.innerHTML += '<div class="text-danger mt-2"><i class="bi bi-exclamation-triangle"></i> Error: File size exceeds 5MB limit</div>';
+            uploadBtn.disabled = true;
+        }
+    } else {
+        preview.style.display = 'none';
+        uploadBtn.disabled = true;
+    }
+});
+
+// Form submission handling
+document.getElementById('csvUploadForm').addEventListener('submit', function(e) {
+    const uploadBtn = document.getElementById('uploadBtn');
+    uploadBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
+    uploadBtn.disabled = true;
+});
+</script>
+{% endblock %}

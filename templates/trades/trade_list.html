@@ -1,0 +1,411 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Trade List - Trade Journal{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 sidebar d-none d-lg-block">
+            <ul class="sidebar-nav">
+                <li><a href="{% url 'dashboard' %}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a></li>
+                <li><a href="{% url 'trade_list' %}" class="active">
+                    <i class="bi bi-list"></i> Trades
+                </a></li>
+                <li><a href="{% url 'trade_create' %}">
+                    <i class="bi bi-plus-circle"></i> Add Trade
+                </a></li>
+                <li><a href="{% url 'import_trades_csv' %}">
+                    <i class="bi bi-upload"></i> Import CSV
+                </a></li>
+                <li><a href="{% url 'export_trades_csv' %}">
+                    <i class="bi bi-download"></i> Export
+                </a></li>
+                <li><a href="{% url 'profile' %}">
+                    <i class="bi bi-person"></i> Profile
+                </a></li>
+            </ul>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10">
+            <div class="p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="text-gradient mb-1">
+                            <i class="bi bi-list"></i> Trade History
+                        </h2>
+                        <p class="text-secondary mb-0">Manage and analyze your trading records</p>
+                    </div>
+                    <div>
+                        <a href="{% url 'import_trades_csv' %}" class="btn btn-outline-secondary me-2 hover-lift">
+                            <i class="bi bi-upload"></i> Import CSV
+                        </a>
+                        <a href="{% url 'export_trades_csv' %}?{{ request.GET.urlencode }}" class="btn btn-outline-primary me-2 hover-lift">
+                            <i class="bi bi-download"></i> Export CSV
+                        </a>
+                        <a href="{% url 'trade_create' %}" class="btn btn-primary hover-lift">
+                            <i class="bi bi-plus-circle"></i> Add Trade
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Filters -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card hover-glow">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-funnel"></i> Filter Trades
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <form method="get" class="row g-3">
+                                    <div class="col-md-2">
+                                        {{ form.asset }}
+                                    </div>
+                                    <div class="col-md-2">
+                                        {{ form.trade_type }}
+                                    </div>
+                                    <div class="col-md-2">
+                                        {{ form.date_from }}
+                                    </div>
+                                    <div class="col-md-2">
+                                        {{ form.date_to }}
+                                    </div>
+                                    <div class="col-md-2">
+                                        {{ form.tags }}
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="submit" class="btn btn-primary w-100 hover-lift">
+                                            <i class="bi bi-search"></i> Filter
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Trade List -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card hover-glow">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">
+                                        <i class="bi bi-list"></i> Trades
+                                    </h6>
+                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="toggleMergeMode()">
+                                        <i class="bi bi-union"></i> Merge Trades
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                {% if page_obj %}
+                                    <!-- Merge Form (Hidden by default) -->
+                                    <form method="post" action="{% url 'merge_trades' %}" id="mergeForm" style="display: none;">
+                                        {% csrf_token %}
+                                        <div class="glass-light p-3 rounded-3 mb-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-1">Merge Selected Trades</h6>
+                                                    <small class="text-muted">Select trades with same symbol and type to merge</small>
+                                                </div>
+                                                <div>
+                                                    <button type="submit" class="btn btn-primary btn-sm me-2">
+                                                        <i class="bi bi-union"></i> Merge
+                                                    </button>
+                                                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleMergeMode()">
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </form>
+                                    
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th id="mergeCheckboxHeader" style="display: none; width: 50px;" class="text-center">
+                                                        <input type="checkbox" id="selectAll" onchange="toggleAllCheckboxes()">
+                                                    </th>
+                                                    <th style="width: 140px;">Date</th>
+                                                    <th style="width: 120px;">Asset</th>
+                                                    <th style="width: 80px;" class="text-center">Type</th>
+                                                    <th style="width: 100px;" class="text-end">Entry Price</th>
+                                                    <th style="width: 100px;" class="text-end">Exit Price</th>
+                                                    <th style="width: 100px;" class="text-end">Position Size</th>
+                                                    <th style="width: 100px;" class="text-end">P&L</th>
+                                                    <th style="width: 120px;">Tags</th>
+                                                    <th style="width: 100px;" class="text-center">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for trade in page_obj %}
+                                                    <tr class="trade-row hover-lift" 
+                                                        style="cursor: pointer;" 
+                                                        onclick="handleTradeClick(event, '{% url 'trade_detail' trade.pk %}')">
+                                                        <td class="merge-checkbox text-center" style="display: none;" onclick="event.stopPropagation();">
+                                                            <input type="checkbox" name="trade_ids" value="{{ trade.pk }}" form="mergeForm" 
+                                                                   data-symbol="{{ trade.asset }}" data-type="{{ trade.trade_type }}"
+                                                                   onchange="validateMergeSelection()">
+                                                        </td>
+                                                        <td class="align-middle">
+                                                            <small>{{ trade.open_date|date:"M d, Y" }}</small><br>
+                                                            <small class="text-muted">{{ trade.open_date|date:"H:i" }}</small>
+                                                        </td>
+                                                        <td class="align-middle">
+                                                            <div>
+                                                                <strong>{{ trade.asset }}</strong>
+                                                                {% if trade.is_merged %}
+                                                                    <br><span class="badge bg-secondary" style="font-size: 10px;">
+                                                                        Merged ({{ trade.merged_trades_count }})
+                                                                    </span>
+                                                                {% endif %}
+                                                            </div>
+                                                        </td>
+                                                        <td class="align-middle text-center">
+                                                            <span class="badge {% if trade.trade_type == 'BUY' %}bg-success{% else %}bg-danger{% endif %}">
+                                                                {{ trade.trade_type }}
+                                                            </span>
+                                                        </td>
+                                                        <td class="align-middle text-end">
+                                                            <strong>${{ trade.entry_price|floatformat:2 }}</strong>
+                                                        </td>
+                                                        <td class="align-middle text-end">
+                                                            {% if trade.exit_price %}
+                                                                <strong>${{ trade.exit_price|floatformat:2 }}</strong>
+                                                            {% else %}
+                                                                <span class="text-muted">Open</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="align-middle text-end">
+                                                            <strong>{{ trade.position_size }}</strong>
+                                                        </td>
+                                                        <td class="align-middle text-end">
+                                                            {% if trade.profit_loss %}
+                                                                <strong class="{% if trade.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                                    {% if trade.profit_loss >= 0 %}+{% endif %}${{ trade.profit_loss|floatformat:2 }}
+                                                                </strong>
+                                                            {% else %}
+                                                                <span class="text-muted">-</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="align-middle">
+                                                            {% if trade.tags %}
+                                                                <div class="d-flex flex-wrap gap-1">
+                                                                    {% for tag in trade.get_tags_list %}
+                                                                        <span class="badge bg-secondary" style="font-size: 10px;">{{ tag }}</span>
+                                                                    {% endfor %}
+                                                                </div>
+                                                            {% else %}
+                                                                <span class="text-muted">-</span>
+                                                            {% endif %}
+                                                        </td>
+                                                        <td class="align-middle text-center" onclick="event.stopPropagation();">
+                                                            <div class="btn-group btn-group-sm">
+                                                                <a href="{% url 'trade_detail' trade.pk %}" 
+                                                                   class="btn btn-outline-primary hover-lift" 
+                                                                   title="View Details">
+                                                                    <i class="bi bi-eye"></i>
+                                                                </a>
+                                                                <a href="{% url 'trade_update' trade.pk %}" 
+                                                                   class="btn btn-outline-warning hover-lift" 
+                                                                   title="Edit Trade">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </a>
+                                                                <a href="{% url 'trade_delete' trade.pk %}" 
+                                                                   class="btn btn-outline-danger hover-lift" 
+                                                                   title="Delete Trade"
+                                                                   onclick="return confirm('Are you sure you want to delete this trade?')">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </a>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
+                                    <!-- Pagination -->
+                                    {% if page_obj.has_other_pages %}
+                                        <nav aria-label="Trade pagination" class="mt-4">
+                                            <ul class="pagination justify-content-center">
+                                                {% if page_obj.has_previous %}
+                                                    <li class="page-item">
+                                                        <a class="page-link hover-lift" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">First</a>
+                                                    </li>
+                                                    <li class="page-item">
+                                                        <a class="page-link hover-lift" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Previous</a>
+                                                    </li>
+                                                {% endif %}
+                                                
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                                                </li>
+                                                
+                                                {% if page_obj.has_next %}
+                                                    <li class="page-item">
+                                                        <a class="page-link hover-lift" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Next</a>
+                                                    </li>
+                                                    <li class="page-item">
+                                                        <a class="page-link hover-lift" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Last</a>
+                                                    </li>
+                                                {% endif %}
+                                            </ul>
+                                        </nav>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <div class="glass-medium p-5 rounded-4">
+                                            <i class="bi bi-journal-x display-4 text-muted mb-3"></i>
+                                            <h5 class="text-muted mb-3">No trades found</h5>
+                                            <p class="text-secondary mb-4">Start your trading journey by adding your first trade</p>
+                                            <a href="{% url 'trade_create' %}" class="btn btn-primary hover-lift">
+                                                <i class="bi bi-plus-circle"></i> Add Your First Trade
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let mergeMode = false;
+
+function toggleMergeMode() {
+    mergeMode = !mergeMode;
+    const mergeForm = document.getElementById('mergeForm');
+    const checkboxHeader = document.getElementById('mergeCheckboxHeader');
+    const checkboxCells = document.querySelectorAll('.merge-checkbox');
+    const tradeRows = document.querySelectorAll('.trade-row');
+    
+    if (mergeMode) {
+        mergeForm.style.display = 'block';
+        checkboxHeader.style.display = 'table-cell';
+        checkboxCells.forEach(cell => cell.style.display = 'table-cell');
+        tradeRows.forEach(row => row.style.cursor = 'default');
+    } else {
+        mergeForm.style.display = 'none';
+        checkboxHeader.style.display = 'none';
+        checkboxCells.forEach(cell => cell.style.display = 'none');
+        tradeRows.forEach(row => row.style.cursor = 'pointer');
+        // Uncheck all checkboxes
+        document.querySelectorAll('input[name="trade_ids"]').forEach(cb => cb.checked = false);
+        document.getElementById('selectAll').checked = false;
+        
+        // Remove any existing warnings
+        const existingWarning = document.querySelector('.merge-warning');
+        if (existingWarning) existingWarning.remove();
+    }
+}
+
+function handleTradeClick(event, url) {
+    if (!mergeMode && !event.target.closest('.btn-group')) {
+        window.location.href = url;
+    }
+}
+
+function toggleAllCheckboxes() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('input[name="trade_ids"]');
+    checkboxes.forEach(cb => cb.checked = selectAll.checked);
+    validateMergeSelection();
+}
+
+function validateMergeSelection() {
+    const checkedBoxes = document.querySelectorAll('input[name="trade_ids"]:checked');
+    const mergeButton = document.querySelector('#mergeForm button[type="submit"]');
+    
+    if (checkedBoxes.length < 2) {
+        mergeButton.disabled = true;
+        // Remove warning if less than 2 selected
+        const existingWarning = document.querySelector('.merge-warning');
+        if (existingWarning) existingWarning.remove();
+        return;
+    }
+    
+    // Check if all selected trades have same symbol and type
+    const firstTrade = checkedBoxes[0];
+    const firstSymbol = firstTrade.dataset.symbol;
+    const firstType = firstTrade.dataset.type;
+    
+    let canMerge = true;
+    checkedBoxes.forEach(cb => {
+        if (cb.dataset.symbol !== firstSymbol || cb.dataset.type !== firstType) {
+            canMerge = false;
+        }
+    });
+    
+    mergeButton.disabled = !canMerge;
+    
+    // Remove existing warning first
+    const existingWarning = document.querySelector('.merge-warning');
+    if (existingWarning) existingWarning.remove();
+    
+    if (!canMerge && checkedBoxes.length >= 2) {
+        // Show warning
+        const warning = document.createElement('div');
+        warning.className = 'alert alert-warning merge-warning mt-2';
+        warning.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Selected trades must have the same symbol and type to merge.';
+        document.querySelector('#mergeForm .glass-light').appendChild(warning);
+    }
+}
+
+// Add some custom CSS for better table styling
+document.addEventListener('DOMContentLoaded', function() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .table th {
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+            white-space: nowrap;
+        }
+        
+        .table td {
+            vertical-align: middle;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .trade-row:hover {
+            background-color: rgba(0, 0, 0, 0.02);
+            transform: translateY(-1px);
+            transition: all 0.2s ease;
+        }
+        
+        .btn-group-sm .btn {
+            padding: 0.25rem 0.4rem;
+            font-size: 0.775rem;
+        }
+        
+        .badge {
+            font-weight: 500;
+        }
+        
+        @media (max-width: 768px) {
+            .table-responsive {
+                font-size: 0.875rem;
+            }
+            
+            .btn-group-sm .btn {
+                padding: 0.2rem 0.3rem;
+                font-size: 0.7rem;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+});
+</script>
+{% endblock %}
