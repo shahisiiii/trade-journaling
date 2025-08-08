@@ -12,4 +12,16 @@ urlpatterns = [
     path('<int:pk>/unmerge/', views.unmerge_trade, name='unmerge_trade'),
     path('export/csv/', views.export_trades_csv, name='export_trades_csv'),
     path('import/csv/', views.import_trades_csv, name='import_trades_csv'),
+    
+    # Events URLs
+    path('events/', views.events_list, name='events_list'),
+    path('events/add/', views.event_create, name='event_create'),
+    path('events/<int:pk>/edit/', views.event_update, name='event_update'),
+    path('events/<int:pk>/delete/', views.event_delete, name='event_delete'),
+    
+    # Achievements URLs
+    path('achievements/', views.achievements_list, name='achievements_list'),
+    path('achievements/add/', views.achievement_create, name='achievement_create'),
+    path('achievements/<int:pk>/edit/', views.achievement_update, name='achievement_update'),
+    path('achievements/<int:pk>/delete/', views.achievement_delete, name='achievement_delete'),
 ]

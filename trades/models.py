@@ -7,22 +7,77 @@ User = get_user_model()
 
 # Forex pairs with their flag images
 FOREX_PAIRS = [
-    ('GBPUSD', 'GBP/USD'),
-    ('EURUSD', 'EUR/USD'),
-    ('USDJPY', 'USD/JPY'),
-    ('USDCHF', 'USD/CHF'),
-    ('AUDUSD', 'AUD/USD'),
-    ('USDCAD', 'USD/CAD'),
-    ('NZDUSD', 'NZD/USD'),
-    ('EURGBP', 'EUR/GBP'),
-    ('EURJPY', 'EUR/JPY'),
-    ('GBPJPY', 'GBP/JPY'),
-    ('XAUUSD', 'XAU/USD (Gold)'),
-    ('XAGUSD', 'XAG/USD (Silver)'),
-    ('BTCUSD', 'BTC/USD'),
-    ('ETHUSD', 'ETH/USD'),
+    ('EURUSD', 'EUR/USD',),
+    ('GBPUSD', 'GBP/USD',),
+    ('USDJPY', 'USD/JPY',),
+    ('USDCHF', 'USD/CHF',),
+    ('AUDUSD', 'AUD/USD',),
+    ('USDCAD', 'USD/CAD', ),
+    ('NZDUSD', 'NZD/USD', ),
+    ('EURGBP', 'EUR/GBP', ),
+    ('EURJPY', 'EUR/JPY', ),
+    ('GBPJPY', 'GBP/JPY', ),
+    ('XAUUSD', 'XAU/USD (Gold)',),
+    ('XAGUSD', 'XAG/USD (Silver)',),
+    ('BTCUSD', 'BTC/USD', ),
+    ('ETHUSD', 'ETH/USD', ),
 ]
 
+class Event(models.Model):
+    EVENT_TYPES = [
+        ('ECONOMIC', 'Economic Event'),
+        ('EARNINGS', 'Earnings Report'),
+        ('NEWS', 'Market News'),
+        ('PERSONAL', 'Personal Event'),
+        ('WEBINAR', 'Webinar/Education'),
+        ('OTHER', 'Other'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='events')
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    event_type = models.CharField(max_length=20, choices=EVENT_TYPES, default='OTHER')
+    event_date = models.DateTimeField()
+    image = models.ImageField(upload_to='events/', null=True, blank=True)
+    is_completed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-event_date']
+    
+    def __str__(self):
+        return f"{self.title} - {self.event_date.strftime('%Y-%m-%d')}"
+    
+    @property
+    def is_upcoming(self):
+        return self.event_date > timezone.now() and not self.is_completed
+
+class Achievement(models.Model):
+    ACHIEVEMENT_TYPES = [
+        ('MILESTONE', 'Trading Milestone'),
+        ('PROFIT', 'Profit Target'),
+        ('STREAK', 'Winning Streak'),
+        ('EDUCATION', 'Education/Certification'),
+        ('PERSONAL', 'Personal Goal'),
+        ('OTHER', 'Other'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='achievements')
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    achievement_type = models.CharField(max_length=20, choices=ACHIEVEMENT_TYPES, default='OTHER')
+    achieved_date = models.DateTimeField(default=timezone.now)
+    image = models.ImageField(upload_to='achievements/', null=True, blank=True)
+    is_featured = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-achieved_date']
+    
+    def __str__(self):
+        return f"{self.title} - {self.achieved_date.strftime('%Y-%m-%d')}"
 class Trade(models.Model):
     TRADE_TYPES = [
         ('BUY', 'Buy'),

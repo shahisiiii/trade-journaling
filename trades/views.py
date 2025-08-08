@@ -13,8 +13,8 @@ from datetime import datetime
 import io
 import calendar
 import uuid
-from .models import Trade
-from .forms import TradeForm, TradeFilterForm, CSVUploadForm
+from .models import Achievement, Trade, Event
+from .forms import AchievementForm, EventForm, TradeForm, TradeFilterForm, CSVUploadForm
 
 @login_required
 def dashboard(request):
@@ -88,8 +88,27 @@ def dashboard(request):
     weekly_data.reverse()
     
     # Calendar data for current month
-    year = now.year
-    month = now.month
+    # Get month/year from request parameters or use current
+    current_year = int(request.GET.get('year', now.year))
+    current_month = int(request.GET.get('month', now.month))
+    
+    # Calculate previous and next month/year
+    if current_month == 1:
+        prev_month = 12
+        prev_year = current_year - 1
+    else:
+        prev_month = current_month - 1
+        prev_year = current_year
+    
+    if current_month == 12:
+        next_month = 1
+        next_year = current_year + 1
+    else:
+        next_month = current_month + 1
+        next_year = current_year
+    
+    year = current_year
+    month = current_month
     
     # Get trades for the month
     month_start = datetime(year, month, 1)
@@ -101,6 +120,35 @@ def dashboard(request):
     month_trades = user_trades.filter(
         open_date__range=[month_start, month_end]
     ).order_by('open_date')
+    
+    # Calculate monthly statistics
+    month_total_trades = month_trades.count()
+    month_pl = sum([trade.profit_loss for trade in month_trades if trade.profit_loss]) or 0
+    month_winning_trades = sum(1 for trade in month_trades if trade.profit_loss and trade.profit_loss > 0)
+    month_win_rate = (month_winning_trades / month_total_trades * 100) if month_total_trades > 0 else 0
+    
+    # Calculate weekly statistics for current month
+    weeks_in_month = []
+    current_date = month_start
+    week_num = 1
+    
+    while current_date <= month_end:
+        week_start = current_date
+        week_end = min(current_date + timedelta(days=6), month_end)
+        
+        week_trades = month_trades.filter(open_date__date__range=[week_start.date(), week_end.date()])
+        week_pl = sum([trade.profit_loss for trade in week_trades if trade.profit_loss]) or 0
+        
+        weeks_in_month.append({
+            'week_num': week_num,
+            'start_date': week_start,
+            'end_date': week_end,
+            'trades_count': week_trades.count(),
+            'pl': float(week_pl)
+        })
+        
+        current_date += timedelta(days=7)
+        week_num += 1
     
     # Create calendar data
     cal = calendar.monthcalendar(year, month)
@@ -119,6 +167,24 @@ def dashboard(request):
                     'profit': sum([t.profit_loss for t in day_trades if t.profit_loss]) or 0
                 })
         calendar_data.append(week_data)
+    # Get latest events and achievements
+    latest_events = Event.objects.filter(user=request.user).order_by('-event_date')[:5]
+    latest_achievements = Achievement.objects.filter(user=request.user).order_by('-achieved_date')[:5]
+    
+    # Get upcoming events (next 5 upcoming events)
+    upcoming_events = Event.objects.filter(
+        user=request.user, 
+        event_date__gte=now,
+        is_completed=False
+    ).order_by('event_date')[:5]
+    
+    # Get recent achievements (last 30 days)
+    thirty_days_ago = now - timedelta(days=30)
+    recent_achievements = Achievement.objects.filter(
+        user=request.user,
+        achieved_date__gte=thirty_days_ago
+    ).order_by('-achieved_date')[:3]
+   
     context = {
         'total_trades': total_trades,
         'win_rate': round(win_rate, 2),
@@ -133,6 +199,16 @@ def dashboard(request):
         'calendar_data': calendar_data,
         'current_month': calendar.month_name[month],
         'current_year': year,
+        'prev_month': prev_month,
+        'prev_year': prev_year,
+        'next_month': next_month,
+        'next_year': next_year,
+        'month_total_trades': month_total_trades,
+        'month_pl': float(month_pl),
+        'month_win_rate': round(month_win_rate, 2),
+        'weeks_in_month': weeks_in_month,
+        'latest_events': latest_events,
+        'latest_achievements': latest_achievements,
     }
     
     return render(request, 'trades/dashboard.html', context)
@@ -515,3 +591,85 @@ def import_trades_csv(request):
         form = CSVUploadForm()
     
     return render(request, 'trades/import_csv.html', {'form': form})
+
+@login_required
+def events_list(request):
+    events = Event.objects.filter(user=request.user)
+    return render(request, 'trades/events_list.html', {'events': events})
+
+@login_required
+def event_create(request):
+    if request.method == 'POST':
+        form = EventForm(request.POST, request.FILES)
+        if form.is_valid():
+            event = form.save(commit=False)
+            event.user = request.user
+            event.save()
+            messages.success(request, 'Event created successfully!')
+            return redirect('events_list')
+    else:
+        form = EventForm()
+    return render(request, 'trades/event_form.html', {'form': form, 'title': 'Add Event'})
+
+@login_required
+def event_update(request, pk):
+    event = get_object_or_404(Event, pk=pk, user=request.user)
+    if request.method == 'POST':
+        form = EventForm(request.POST, request.FILES, instance=event)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Event updated successfully!')
+            return redirect('events_list')
+    else:
+        form = EventForm(instance=event)
+    return render(request, 'trades/event_form.html', {'form': form, 'title': 'Edit Event', 'event': event})
+
+@login_required
+def event_delete(request, pk):
+    event = get_object_or_404(Event, pk=pk, user=request.user)
+    if request.method == 'POST':
+        event.delete()
+        messages.success(request, 'Event deleted successfully!')
+        return redirect('events_list')
+    return render(request, 'trades/event_confirm_delete.html', {'event': event})
+
+@login_required
+def achievements_list(request):
+    achievements = Achievement.objects.filter(user=request.user)
+    return render(request, 'trades/achievements_list.html', {'achievements': achievements})
+
+@login_required
+def achievement_create(request):
+    if request.method == 'POST':
+        form = AchievementForm(request.POST, request.FILES)
+        if form.is_valid():
+            achievement = form.save(commit=False)
+            achievement.user = request.user
+            achievement.save()
+            messages.success(request, 'Achievement created successfully!')
+            return redirect('achievements_list')
+    else:
+        form = AchievementForm()
+    return render(request, 'trades/achievement_form.html', {'form': form, 'title': 'Add Achievement'})
+
+@login_required
+def achievement_update(request, pk):
+    achievement = get_object_or_404(Achievement, pk=pk, user=request.user)
+    if request.method == 'POST':
+        form = AchievementForm(request.POST, request.FILES, instance=achievement)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Achievement updated successfully!')
+            return redirect('achievements_list')
+    else:
+        form = AchievementForm(instance=achievement)
+    return render(request, 'trades/achievement_form.html', {'form': form, 'title': 'Edit Achievement', 'achievement': achievement})
+
+@login_required
+def achievement_delete(request, pk):
+    achievement = get_object_or_404(Achievement, pk=pk, user=request.user)
+    if request.method == 'POST':
+        achievement.delete()
+        messages.success(request, 'Achievement deleted successfully!')
+        return redirect('achievements_list')
+    return render(request, 'trades/achievement_confirm_delete.html', {'achievement': achievement})

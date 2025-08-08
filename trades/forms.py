@@ -1,5 +1,5 @@
 from django import forms
-from .models import Trade
+from .models import Achievement, Trade, Event
 import csv
 import io
 
@@ -66,3 +66,28 @@ class CSVUploadForm(forms.Form):
             raise forms.ValidationError('File size must be under 5MB.')
         
         return csv_file
+
+class EventForm(forms.ModelForm):
+    class Meta:
+        model = Event
+        fields = ['title', 'description', 'event_type', 'event_date', 'image']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Event title'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Event description'}),
+            'event_type': forms.Select(attrs={'class': 'form-select'}),
+            'event_date': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'image': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+
+class AchievementForm(forms.ModelForm):
+    class Meta:
+        model = Achievement
+        fields = ['title', 'description', 'achievement_type', 'achieved_date', 'image', 'is_featured']
+        widgets = {
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Achievement title'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Achievement description'}),
+            'achievement_type': forms.Select(attrs={'class': 'form-select'}),
+            'achieved_date': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+            'image': forms.FileInput(attrs={'class': 'form-control'}),
+            'is_featured': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
