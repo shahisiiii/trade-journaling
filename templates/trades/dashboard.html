@@ -23,6 +23,12 @@
                 <li><a href="{% url 'export_trades_csv' %}">
                     <i class="bi bi-download"></i> Export
                 </a></li>
+                <li><a href="{% url 'events_list' %}">
+                    <i class="bi bi-calendar-event"></i> Events
+                </a></li>
+                <li><a href="{% url 'achievements_list' %}">
+                    <i class="bi bi-trophy"></i> Achievements
+                </a></li>
                 <li><a href="{% url 'profile' %}">
                     <i class="bi bi-person"></i> Profile
                 </a></li>
@@ -128,6 +134,122 @@
                     </div>
                 </div>
                 
+                <!-- Events & Achievements Section - Priority Position -->
+                <div class="row mb-4">
+                    <!-- Upcoming Events -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card fade-in-up hover-glow" style="border: 2px solid rgba(0, 0, 0, 0.1); background: rgba(255, 255, 255, 0.6);">
+                            <div class="card-header" style="background: rgba(0, 0, 0, 0.08);">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0" style="font-weight: 700;">
+                                        <i class="bi bi-calendar-event"></i> Upcoming Events
+                                    </h6>
+                                    <a href="{% url 'events_list' %}" class="btn btn-outline-primary btn-sm hover-lift">All</a>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                {% if latest_events %}
+                                    {% for event in latest_events %}
+                                        <div class="glass-light p-3 rounded-3 mb-3">
+                                            {% if event.image %}
+                                                <div class="mb-3">
+                                                    <img src="{{ event.image.url }}" alt="{{ event.title }}" class="img-fluid rounded" style="width: 100%; max-height: 200px; object-fit: cover; border: 2px solid rgba(0,0,0,0.1);">
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <h6 class="mb-0" style="font-size: 16px; font-weight: 600;">{{ event.title }}</h6>
+                                                    <span class="badge bg-secondary" style="font-size: 10px;">{{ event.get_event_type_display }}</span>
+                                                </div>
+                                                <p class="text-muted mb-2" style="font-size: 12px;">
+                                                    <i class="bi bi-calendar-event me-1"></i>{{ event.event_date|date:"M d, Y H:i" }}
+                                                </p>
+                                                {% if event.description %}
+                                                    <p class="mb-0 text-secondary" style="font-size: 12px;">{{ event.description|truncatewords:15 }}</p>
+                                                {% endif %}
+                                                {% if not event.image %}
+                                                    <div class="text-center py-3">
+                                                        <i class="bi bi-calendar-event text-muted" style="font-size: 2rem;"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-3">
+                                        <div class="glass-medium p-3 rounded-3">
+                                            <i class="bi bi-calendar-plus text-muted mb-2" style="font-size: 1.5rem;"></i>
+                                            <p class="text-muted small mb-2">No upcoming events</p>
+                                            <a href="{% url 'event_create' %}" class="btn btn-primary btn-sm hover-lift">
+                                                <i class="bi bi-plus-circle"></i> Add Event
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Achievements -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card fade-in-up hover-glow" style="border: 2px solid rgba(0, 0, 0, 0.1); background: rgba(255, 255, 255, 0.6);">
+                            <div class="card-header" style="background: rgba(0, 0, 0, 0.08);">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0" style="font-weight: 700;">
+                                        <i class="bi bi-trophy"></i> Recent Achievements
+                                    </h6>
+                                    <a href="{% url 'achievements_list' %}" class="btn btn-outline-primary btn-sm hover-lift">All</a>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                {% if latest_achievements %}
+                                    {% for achievement in latest_achievements %}
+                                        <div class="glass-light p-3 rounded-3 mb-3">
+                                            {% if achievement.image %}
+                                                <div class="mb-3">
+                                                    <img src="{{ achievement.image.url }}" alt="{{ achievement.title }}" class="img-fluid rounded" style="width: 100%; max-height: 200px; object-fit: cover; border: 2px solid rgba(0,0,0,0.1);">
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                                    <div class="d-flex align-items-center">
+                                                        <h6 class="mb-0 me-2" style="font-size: 16px; font-weight: 600;">{{ achievement.title }}</h6>
+                                                        {% if achievement.is_featured %}
+                                                            <i class="bi bi-star-fill text-warning" style="font-size: 14px;"></i>
+                                                        {% endif %}
+                                                    </div>
+                                                    <span class="badge bg-secondary" style="font-size: 10px;">{{ achievement.get_achievement_type_display }}</span>
+                                                </div>
+                                                <p class="text-muted mb-2" style="font-size: 12px;">
+                                                    <i class="bi bi-calendar-check me-1"></i>{{ achievement.achieved_date|date:"M d, Y" }}
+                                                </p>
+                                                {% if achievement.description %}
+                                                    <p class="mb-0 text-secondary" style="font-size: 12px;">{{ achievement.description|truncatewords:15 }}</p>
+                                                {% endif %}
+                                                {% if not achievement.image %}
+                                                    <div class="text-center py-3">
+                                                        <i class="bi bi-trophy text-warning" style="font-size: 2rem;"></i>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-3">
+                                        <div class="glass-medium p-3 rounded-3">
+                                            <i class="bi bi-trophy text-muted mb-2" style="font-size: 1.5rem;"></i>
+                                            <p class="text-muted small mb-2">No achievements yet</p>
+                                            <a href="{% url 'achievement_create' %}" class="btn btn-primary btn-sm hover-lift">
+                                                <i class="bi bi-plus-circle"></i> Add Achievement
+                                            </a>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="row mb-4">
                     <!-- Monthly Trade Chart -->
                     <div class="col-lg-9 mb-4">
@@ -144,7 +266,7 @@
                                 </div>
                             </div>
                             <div class="card-body">
-                                <div class="chart-container" style="height: 280px;">
+                                <div class="chart-container" style="height: 250px;">
                                     <canvas id="activityChart"></canvas>
                                 </div>
                             </div>
@@ -159,7 +281,7 @@
                                     <i class="bi bi-trophy"></i> Performance
                                 </h6>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body" style="height: 250px; overflow-y: auto;">
                                 {% if best_trade %}
                                     <div class="mb-4">
                                         <div class="glass-light p-3 rounded-3">
@@ -227,16 +349,16 @@
                                         <i class="bi bi-calendar3"></i> {{ current_month }} {{ current_year }}
                                     </h6>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="?year={{ prev_year }}&month={{ prev_month }}" class="btn btn-outline-secondary">
+                                        <button type="button" class="btn btn-outline-secondary" onclick="changeMonth({{ prev_year }}, {{ prev_month }})">
                                             <i class="bi bi-chevron-left"></i>
-                                        </a>
-                                        <a href="?year={{ next_year }}&month={{ next_month }}" class="btn btn-outline-secondary">
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="changeMonth({{ next_year }}, {{ next_month }})">
                                             <i class="bi bi-chevron-right"></i>
-                                        </a>
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-                            <div class="card-body p-3">
+                            <div class="card-body p-3" id="calendar-content">
                                 <!-- Calendar Grid -->
                                 <div class="table-responsive">
                                     <table class="table table-sm mb-3" style="font-size: 12px;">
@@ -317,6 +439,14 @@
                                     {% endfor %}
                                 </div>
                             </div>
+                            
+                            <!-- Loading indicator -->
+                            <div id="calendar-loading" class="text-center p-4" style="display: none;">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 mb-0 small text-muted">Loading calendar...</p>
+                            </div>
                         </div>
                     </div>
                     
@@ -339,7 +469,7 @@
                 
                 <!-- Recent Trades -->
                 <div class="row">
-                    <div class="col-lg-8">
+                    <div class="col-lg-12">
                         <div class="card fade-in-up hover-glow">
                             <div class="card-header">
                                 <div class="d-flex justify-content-between align-items-center">
@@ -361,51 +491,52 @@
                                                     <th>Exit</th>
                                                     <th>P&L</th>
                                                     <th>Date</th>
-                                                    <th>Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {% for trade in recent_trades %}
-                                                    <tr>
-                                                        <td>
-                                                            <strong>{{ trade.asset }}</strong>
-                                                        </td>
-                                                        <td>
-                                                            <span class="badge {% if trade.trade_type == 'BUY' %}bg-success{% else %}bg-danger{% endif %}">
-                                                                {{ trade.trade_type }}
+                                                <tr class="clickable-row" data-href="{% url 'trade_detail' trade.pk %}">
+                                                    <td><strong>{{ trade.asset }}</strong></td>
+
+                                                    <td>
+                                                        <span class="badge {% if trade.trade_type == 'BUY' %}bg-success{% else %}bg-danger{% endif %}">
+                                                            {{ trade.trade_type }}
+                                                        </span>
+                                                    </td>
+
+                                                    <td>${{ trade.entry_price }}</td>
+
+                                                    <td>
+                                                        {% if trade.exit_price %}
+                                                            ${{ trade.exit_price }}
+                                                        {% else %}
+                                                            <span class="text-muted">Open</span>
+                                                        {% endif %}
+                                                    </td>
+
+                                                    <td>
+                                                        {% if trade.profit_loss %}
+                                                            <span class="{% if trade.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                                ${{ trade.profit_loss|floatformat:2 }}
                                                             </span>
-                                                        </td>
-                                                        <td>${{ trade.entry_price }}</td>
-                                                        <td>
-                                                            {% if trade.exit_price %}
-                                                                ${{ trade.exit_price }}
-                                                            {% else %}
-                                                                <span class="text-muted">Open</span>
-                                                            {% endif %}
-                                                        </td>
-                                                        <td>
-                                                            {% if trade.profit_loss %}
-                                                                <span class="{% if trade.profit_loss >= 0 %}text-success{% else %}text-danger{% endif %}">
-                                                                    ${{ trade.profit_loss|floatformat:2 }}
-                                                                </span>
-                                                            {% else %}
-                                                                <span class="text-muted">-</span>
-                                                            {% endif %}
-                                                        </td>
-                                                        <td>
-                                                            <small class="text-muted">{{ trade.open_date|date:"M d, H:i" }}</small>
-                                                        </td>
-                                                        <td>
-                                                            <div class="btn-group btn-group-sm">
-                                                                <a href="{% url 'trade_detail' trade.pk %}" class="btn btn-outline-primary hover-lift">
-                                                                    <i class="bi bi-eye"></i>
-                                                                </a>
-                                                                <a href="{% url 'trade_update' trade.pk %}" class="btn btn-outline-warning hover-lift">
-                                                                    <i class="bi bi-pencil"></i>
-                                                                </a>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
+                                                        {% else %}
+                                                            <span class="text-muted">-</span>
+                                                        {% endif %}
+                                                    </td>
+
+                                                    <td><small class="text-muted">{{ trade.open_date|date:"M d, H:i" }}</small></td>
+
+                                                    <td class="actions-col">
+                                                        <div class="dropdown action-menu" onclick="event.stopPropagation()">
+                                                            <button class="btn btn-light btn-sm" data-bs-toggle="dropdown">⋮</button>
+                                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                                <li><a class="dropdown-item" href="{% url 'trade_detail' trade.pk %}">View Details</a></li>
+                                                                <li><a class="dropdown-item" href="{% url 'trade_update' trade.pk %}">Edit Trade</a></li>
+                                                                <li><a class="dropdown-item text-danger" href="{% url 'trade_delete' trade.pk %}">Delete Trade</a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </td>
+                                                </tr>
                                                 {% endfor %}
                                             </tbody>
                                         </table>
@@ -425,106 +556,29 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Events & Achievements -->
-                    <div class="col-lg-4">
-                        <!-- Upcoming Events -->
-                        <div class="card fade-in-up hover-glow mb-4">
-                            <div class="card-header">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0">
-                                        <i class="bi bi-calendar-event"></i> Upcoming Events
-                                    </h6>
-                                    <a href="{% url 'events_list' %}" class="btn btn-outline-primary btn-sm hover-lift">All</a>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                {% if latest_events %}
-                                    {% for event in latest_events %}
-                                        <div class="glass-light p-3 rounded-3 mb-3">
-                                            <div class="d-flex align-items-start">
-                                                {% if event.image %}
-                                                    <img src="{{ event.image.url }}" alt="{{ event.title }}" class="rounded me-3" style="width: 40px; height: 40px; object-fit: cover;">
-                                                {% else %}
-                                                    <div class="glass-medium p-2 rounded-circle me-3">
-                                                        <i class="bi bi-calendar-event"></i>
-                                                    </div>
-                                                {% endif %}
-                                                <div class="flex-grow-1">
-                                                    <h6 class="mb-1 small">{{ event.title }}</h6>
-                                                    <small class="text-muted">{{ event.event_date|date:"M d, Y H:i" }}</small>
-                                                    {% if event.description %}
-                                                        <p class="mb-0 small text-secondary">{{ event.description|truncatewords:10 }}</p>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                {% else %}
-                                    <div class="text-center py-3">
-                                        <div class="glass-medium p-3 rounded-3">
-                                            <i class="bi bi-calendar-plus text-muted mb-2" style="font-size: 1.5rem;"></i>
-                                            <p class="text-muted small mb-2">No upcoming events</p>
-                                            <a href="{% url 'event_create' %}" class="btn btn-primary btn-sm hover-lift">
-                                                <i class="bi bi-plus-circle"></i> Add Event
-                                            </a>
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <!-- Recent Achievements -->
-                        <div class="card fade-in-up hover-glow">
-                            <div class="card-header">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0">
-                                        <i class="bi bi-trophy"></i> Recent Achievements
-                                    </h6>
-                                    <a href="{% url 'achievements_list' %}" class="btn btn-outline-primary btn-sm hover-lift">All</a>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                {% if latest_achievements %}
-                                    {% for achievement in latest_achievements %}
-                                        <div class="glass-light p-3 rounded-3 mb-3">
-                                            <div class="d-flex align-items-start">
-                                                {% if achievement.image %}
-                                                    <img src="{{ achievement.image.url }}" alt="{{ achievement.title }}" class="rounded me-3" style="width: 40px; height: 40px; object-fit: cover;">
-                                                {% else %}
-                                                    <div class="glass-medium p-2 rounded-circle me-3">
-                                                        <i class="bi bi-trophy text-warning"></i>
-                                                    </div>
-                                                {% endif %}
-                                                <div class="flex-grow-1">
-                                                    <h6 class="mb-1 small">{{ achievement.title }}</h6>
-                                                    <small class="text-muted">{{ achievement.achieved_date|date:"M d, Y" }}</small>
-                                                    {% if achievement.description %}
-                                                        <p class="mb-0 small text-secondary">{{ achievement.description|truncatewords:10 }}</p>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                {% else %}
-                                    <div class="text-center py-3">
-                                        <div class="glass-medium p-3 rounded-3">
-                                            <i class="bi bi-trophy text-muted mb-2" style="font-size: 1.5rem;"></i>
-                                            <p class="text-muted small mb-2">No achievements yet</p>
-                                            <a href="{% url 'achievement_create' %}" class="btn btn-primary btn-sm hover-lift">
-                                                <i class="bi bi-plus-circle"></i> Add Achievement
-                                            </a>
-                                        </div>
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .trade-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        display: inline-block;
+        margin: 0 1px;
+    }
+    
+    .trade-buy {
+        background-color: #28a745;
+    }
+    
+    .trade-sell {
+        background-color: #dc3545;
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -653,6 +707,14 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        top: 10,
+                        bottom: 10,
+                        left: 10,
+                        right: 10
+                    }
+                },
                 plugins: {
                     legend: {
                         display: false
@@ -746,5 +808,130 @@
             observer.observe(el);
         });
     });
+    
+    // AJAX Calendar Navigation
+    function changeMonth(year, month) {
+        // Show loading indicator
+        const calendarContent = document.getElementById('calendar-content');
+        const loadingIndicator = document.getElementById('calendar-loading');
+        
+        calendarContent.style.opacity = '0.5';
+        loadingIndicator.style.display = 'block';
+        
+        // Make AJAX request
+        fetch(`{% url 'calendar_data' %}?year=${year}&month=${month}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            updateCalendar(data);
+            // Hide loading indicator
+            calendarContent.style.opacity = '1';
+            loadingIndicator.style.display = 'none';
+        })
+        .catch(error => {
+            console.error('Error loading calendar:', error);
+            // Hide loading indicator on error
+            calendarContent.style.opacity = '1';
+            loadingIndicator.style.display = 'none';
+            
+            // Show error message
+            alert('Error loading calendar data. Please try again.');
+        });
+    }
+    
+    function updateCalendar(data) {
+        // Update month/year header
+        const monthHeader = document.querySelector('.card-header h6');
+        monthHeader.innerHTML = `<i class="bi bi-calendar3"></i> ${data.current_month} ${data.current_year}`;
+        
+        // Update navigation buttons
+        const prevBtn = document.querySelector('.btn-group button:first-child');
+        const nextBtn = document.querySelector('.btn-group button:last-child');
+        prevBtn.setAttribute('onclick', `changeMonth(${data.prev_year}, ${data.prev_month})`);
+        nextBtn.setAttribute('onclick', `changeMonth(${data.next_year}, ${data.next_month})`);
+        
+        // Update calendar grid
+        const calendarTable = document.querySelector('#calendar-content table tbody');
+        let calendarHTML = '';
+        
+        data.calendar_data.forEach(week => {
+            calendarHTML += '<tr>';
+            week.forEach(dayData => {
+                calendarHTML += '<td class="text-center p-2" style="height: 45px; vertical-align: top; border: 1px solid rgba(0,0,0,0.05);">';
+                
+                if (dayData.day !== 0) {
+                    calendarHTML += '<div class="d-flex flex-column align-items-center">';
+                    calendarHTML += `<span class="fw-bold mb-1" style="font-size: 11px;">${dayData.day}</span>`;
+                    
+                    if (dayData.trades && dayData.trades.length > 0) {
+                        calendarHTML += '<div class="d-flex flex-wrap justify-content-center mb-1" style="gap: 2px;">';
+                        dayData.trades.forEach(trade => {
+                            const color = trade.trade_type === 'BUY' ? '#28a745' : '#dc3545';
+                            calendarHTML += `<div class="rounded-circle" style="width: 4px; height: 4px; background-color: ${color};"></div>`;
+                        });
+                        calendarHTML += '</div>';
+                        
+                        if (dayData.profit !== 0) {
+                            const profitClass = dayData.profit > 0 ? 'text-success' : 'text-danger';
+                            calendarHTML += `<small class="${profitClass}" style="font-size: 6px;">$${dayData.profit.toFixed(1)}</small>`;
+                        }
+                    }
+                    calendarHTML += '</div>';
+                }
+                
+                calendarHTML += '</td>';
+            });
+            calendarHTML += '</tr>';
+        });
+        
+        calendarTable.innerHTML = calendarHTML;
+        
+        // Update monthly summary
+        const summaryStats = document.querySelectorAll('.glass-light .stat-value');
+        if (summaryStats.length >= 3) {
+            summaryStats[0].textContent = data.month_total_trades;
+            summaryStats[1].textContent = `$${data.month_pl.toFixed(1)}`;
+            summaryStats[1].className = `stat-value ${data.month_pl >= 0 ? 'text-success' : 'text-danger'}`;
+            summaryStats[2].textContent = `${data.month_win_rate}%`;
+        }
+        
+        // Update weekly breakdown
+        const weeklyContainer = document.querySelector('.glass-medium');
+        if (weeklyContainer) {
+            let weeklyHTML = '<h6 class="mb-2" style="font-size: 12px; font-weight: 600;">Weekly Breakdown</h6>';
+            data.weeks_in_month.forEach(week => {
+                const plClass = week.pl >= 0 ? 'text-success' : 'text-danger';
+                weeklyHTML += `
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span style="font-size: 10px; font-weight: 500;">W${week.week_num}</span>
+                        <div class="d-flex gap-2">
+                            <span style="font-size: 10px;">${week.trades_count} trades</span>
+                            <span class="${plClass}" style="font-size: 10px; font-weight: 500;">$${week.pl.toFixed(1)}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            weeklyContainer.innerHTML = weeklyHTML;
+        }
+        
+        // Add smooth transition effect
+        const calendarCard = document.querySelector('#calendar-content');
+        calendarCard.style.transform = 'scale(0.98)';
+        setTimeout(() => {
+            calendarCard.style.transform = 'scale(1)';
+        }, 100);
+    }
+    document.addEventListener("click", function(e) {
+    const row = e.target.closest(".clickable-row");
+    if (row) {
+        window.location = row.dataset.href;
+    }
+});
+
 </script>
 {% endblock %}

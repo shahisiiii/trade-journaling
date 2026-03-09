@@ -142,7 +142,6 @@
                                                     <th style="width: 100px;" class="text-end">Position Size</th>
                                                     <th style="width: 100px;" class="text-end">P&L</th>
                                                     <th style="width: 120px;">Tags</th>
-                                                    <th style="width: 100px;" class="text-center">Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -207,24 +206,39 @@
                                                                 <span class="text-muted">-</span>
                                                             {% endif %}
                                                         </td>
-                                                        <td class="align-middle text-center" onclick="event.stopPropagation();">
-                                                            <div class="btn-group btn-group-sm">
-                                                                <a href="{% url 'trade_detail' trade.pk %}" 
-                                                                   class="btn btn-outline-primary hover-lift" 
-                                                                   title="View Details">
-                                                                    <i class="bi bi-eye"></i>
-                                                                </a>
-                                                                <a href="{% url 'trade_update' trade.pk %}" 
-                                                                   class="btn btn-outline-warning hover-lift" 
-                                                                   title="Edit Trade">
-                                                                    <i class="bi bi-pencil"></i>
-                                                                </a>
-                                                                <a href="{% url 'trade_delete' trade.pk %}" 
-                                                                   class="btn btn-outline-danger hover-lift" 
-                                                                   title="Delete Trade"
-                                                                   onclick="return confirm('Are you sure you want to delete this trade?')">
-                                                                    <i class="bi bi-trash"></i>
-                                                                </a>
+                                                        <td class="align-middle text-end actions-col"
+                                                            onclick="event.stopPropagation();">
+
+                                                            <div class="dropdown">
+                                                                <button class="btn btn-light btn-sm action-dots"
+                                                                        data-bs-toggle="dropdown"
+                                                                        aria-expanded="false">
+                                                                    ⋮
+                                                                </button>
+
+                                                                <ul class="dropdown-menu dropdown-menu-end">
+                                                                    <li>
+                                                                        <a class="dropdown-item"
+                                                                        href="{% url 'trade_detail' trade.pk %}">
+                                                                            View Details
+                                                                        </a>
+                                                                    </li>
+
+                                                                    <li>
+                                                                        <a class="dropdown-item"
+                                                                        href="{% url 'trade_update' trade.pk %}">
+                                                                            Edit Trade
+                                                                        </a>
+                                                                    </li>
+
+                                                                    <li>
+                                                                        <a class="dropdown-item text-danger"
+                                                                        href="{% url 'trade_delete' trade.pk %}"
+                                                                        onclick="return confirm('Are you sure you want to delete this trade?')">
+                                                                            Delete Trade
+                                                                        </a>
+                                                                    </li>
+                                                                </ul>
                                                             </div>
                                                         </td>
                                                     </tr>

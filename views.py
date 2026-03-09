@@ -232,198 +232,67 @@ def dashboard(request):
 @login_required
 def get_calendar_data(request):
     """AJAX endpoint for calendar data"""
-    print(f"AJAX request received: {request.GET}")  # Debug log
-    
-    try:
-        user_trades = Trade.objects.filter(user=request.user)
-        now = timezone.now()
-        
-        # Get month/year from request parameters or use current
-        current_year = int(request.GET.get('year', now.year))
-        current_month = int(request.GET.get('month', now.month))
-        
-        print(f"Processing calendar for: {current_month}/{current_year}")  # Debug log
-        
-        # Calculate previous and next month/year
-        if current_month == 1:
-            prev_month = 12
-            prev_year = current_year - 1
-        else:
-            prev_month = current_month - 1
-            prev_year = current_year
-        
-        if current_month == 12:
-            next_month = 1
-            next_year = current_year + 1
-        else:
-            next_month = current_month + 1
-            next_year = current_year
-        
-        year = current_year
-        month = current_month
-        
-        # Get trades for the month
-        month_start = datetime(year, month, 1)
-        if month == 12:
-            month_end = datetime(year + 1, 1, 1) - timedelta(days=1)
-        else:
-            month_end = datetime(year, month + 1, 1) - timedelta(days=1)
-        
-        month_trades = user_trades.filter(
-            open_date__range=[month_start, month_end]
-        ).order_by('open_date')
-        
-        print(f"Found {month_trades.count()} trades for the month")  # Debug log
-        
-        # Calculate monthly statistics
-        month_total_trades = month_trades.count()
-        month_pl = sum([trade.profit_loss for trade in month_trades if trade.profit_loss]) or 0
-        month_winning_trades = sum(1 for trade in month_trades if trade.profit_loss and trade.profit_loss > 0)
-        month_win_rate = (month_winning_trades / month_total_trades * 100) if month_total_trades > 0 else 0
-        
-        # Calculate weekly statistics for current month
-        weeks_in_month = []
-        current_date = month_start
-        week_num = 1
-        
-        while current_date <= month_end:
-            week_start = current_date
-            week_end = min(current_date + timedelta(days=6), month_end)
-            
-            week_trades = month_trades.filter(open_date__date__range=[week_start.date(), week_end.date()])
-            week_pl = sum([trade.profit_loss for trade in week_trades if trade.profit_loss]) or 0
-            
-            weeks_in_month.append({
-                'week_num': week_num,
-                'start_date': week_start.strftime('%Y-%m-%d'),
-                'end_date': week_end.strftime('%Y-%m-%d'),
-                'trades_count': week_trades.count(),
-                'pl': float(week_pl)
-            })
-            
-            current_date += timedelta(days=7)
-            week_num += 1
-        
-        # Create calendar data
-        cal = calendar.monthcalendar(year, month)
-        calendar_data = []
-        
-        for week in cal:
-            week_data = []
-            for day in week:
-                if day == 0:
-                    week_data.append({'day': 0, 'trades': [], 'profit': 0})
-                else:
-                    day_trades = month_trades.filter(open_date__day=day)
-                    # Convert trades to serializable format
-                    trades_data = []
-                    for trade in day_trades:
-                        trades_data.append({
-                            'id': trade.id,
-                            'asset': trade.asset,
-                            'trade_type': trade.trade_type,
-                            'profit_loss': float(trade.profit_loss) if trade.profit_loss else 0,
-                            'entry_price': float(trade.entry_price),
-                            'exit_price': float(trade.exit_price) if trade.exit_price else None,
-                        })
-                    
-                    day_profit = sum([t.profit_loss for t in day_trades if t.profit_loss]) or 0
-                    week_data.append({
-                        'day': day,
-                        'trades': trades_data,
-                        'profit': float(day_profit)
-                    })
-            calendar_data.append(week_data)
-        
-        context = {
-            'calendar_data': calendar_data,
-            'current_month': calendar.month_name[month],
-            'current_year': year,
-            'prev_month': prev_month,
-            'prev_year': prev_year,
-            'next_month': next_month,
-            'next_year': next_year,
-            'month_total_trades': month_total_trades,
-            'month_pl': float(month_pl),
-            'month_win_rate': round(month_win_rate, 2),
-            'weeks_in_month': weeks_in_month,
-        }
-        
-        print(f"Returning calendar data: {context['current_month']} {context['current_year']}")  # Debug log
-        return JsonResponse(context)
-        
-    except Exception as e:
-        print(f"Error in get_calendar_data: {str(e)}")  # Debug log
-        return JsonResponse({'error': str(e)}, status=500)
     user_trades = Trade.objects.filter(user=request.user)
     now = timezone.now()
-    
+
     # Get month/year from request parameters or use current
     current_year = int(request.GET.get('year', now.year))
     current_month = int(request.GET.get('month', now.month))
-    
+
     # Calculate previous and next month/year
     if current_month == 1:
-        prev_month = 12
-        prev_year = current_year - 1
+        prev_month, prev_year = 12, current_year - 1
     else:
-        prev_month = current_month - 1
-        prev_year = current_year
-    
+        prev_month, prev_year = current_month - 1, current_year
+
     if current_month == 12:
-        next_month = 1
-        next_year = current_year + 1
+        next_month, next_year = 1, current_year + 1
     else:
-        next_month = current_month + 1
-        next_year = current_year
-    
-    year = current_year
-    month = current_month
-    
-    # Get trades for the month
-    month_start = datetime(year, month, 1)
-    if month == 12:
-        month_end = datetime(year + 1, 1, 1) - timedelta(days=1)
+        next_month, next_year = current_month + 1, current_year
+
+    # Month start and end
+    month_start = datetime(current_year, current_month, 1)
+    if current_month == 12:
+        month_end = datetime(current_year + 1, 1, 1) - timedelta(days=1)
     else:
-        month_end = datetime(year, month + 1, 1) - timedelta(days=1)
-    
+        month_end = datetime(current_year, current_month + 1, 1) - timedelta(days=1)
+
     month_trades = user_trades.filter(
         open_date__range=[month_start, month_end]
     ).order_by('open_date')
-    
-    # Calculate monthly statistics
+
+    # Monthly stats
     month_total_trades = month_trades.count()
     month_pl = sum([trade.profit_loss for trade in month_trades if trade.profit_loss]) or 0
     month_winning_trades = sum(1 for trade in month_trades if trade.profit_loss and trade.profit_loss > 0)
     month_win_rate = (month_winning_trades / month_total_trades * 100) if month_total_trades > 0 else 0
-    
-    # Calculate weekly statistics for current month
+
+    # Weekly stats
     weeks_in_month = []
     current_date = month_start
     week_num = 1
-    
+
     while current_date <= month_end:
         week_start = current_date
         week_end = min(current_date + timedelta(days=6), month_end)
-        
         week_trades = month_trades.filter(open_date__date__range=[week_start.date(), week_end.date()])
         week_pl = sum([trade.profit_loss for trade in week_trades if trade.profit_loss]) or 0
-        
+
         weeks_in_month.append({
             'week_num': week_num,
-            'start_date': week_start,
-            'end_date': week_end,
+            'start_date': week_start.strftime("%Y-%m-%d"),
+            'end_date': week_end.strftime("%Y-%m-%d"),
             'trades_count': week_trades.count(),
             'pl': float(week_pl)
         })
-        
+
         current_date += timedelta(days=7)
         week_num += 1
-    
-    # Create calendar data
-    cal = calendar.monthcalendar(year, month)
+
+    # Calendar data (JSON serializable)
+    cal = calendar.monthcalendar(current_year, current_month)
     calendar_data = []
-    
+
     for week in cal:
         week_data = []
         for day in week:
@@ -433,15 +302,24 @@ def get_calendar_data(request):
                 day_trades = month_trades.filter(open_date__day=day)
                 week_data.append({
                     'day': day,
-                    'trades': list(day_trades),
+                    'trades': [
+                        {
+                            "id": t.id,
+                            "symbol": t.symbol,
+                            "open_date": t.open_date.strftime("%Y-%m-%d %H:%M:%S"),
+                            "profit_loss": float(t.profit_loss) if t.profit_loss else 0
+                        }
+                        for t in day_trades
+                    ],
                     'profit': sum([t.profit_loss for t in day_trades if t.profit_loss]) or 0
                 })
         calendar_data.append(week_data)
-    
+
+    # Final JSON-safe context
     context = {
         'calendar_data': calendar_data,
-        'current_month': calendar.month_name[month],
-        'current_year': year,
+        'current_month': calendar.month_name[current_month],
+        'current_year': current_year,
         'prev_month': prev_month,
         'prev_year': prev_year,
         'next_month': next_month,
@@ -451,7 +329,7 @@ def get_calendar_data(request):
         'month_win_rate': round(month_win_rate, 2),
         'weeks_in_month': weeks_in_month,
     }
-    
+
     return JsonResponse(context, safe=False)
 @login_required
 def trade_list(request):

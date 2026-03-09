@@ -24,4 +24,7 @@ urlpatterns = [
     path('achievements/add/', views.achievement_create, name='achievement_create'),
     path('achievements/<int:pk>/edit/', views.achievement_update, name='achievement_update'),
     path('achievements/<int:pk>/delete/', views.achievement_delete, name='achievement_delete'),
+    
+    # AJAX endpoints
+    path('calendar-data/', views.get_calendar_data, name='calendar_data'),
 ]

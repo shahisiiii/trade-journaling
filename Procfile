@@ -1,0 +1,1 @@
+web: gunicorn trade_journal.wsgi
