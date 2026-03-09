@@ -27,4 +27,6 @@ urlpatterns = [
     
     # AJAX endpoints
     path('calendar-data/', views.get_calendar_data, name='calendar_data'),
+    path("keep-alive/", views.keep_alive, name="keep_alive"),
 ]
+

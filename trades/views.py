@@ -15,7 +15,10 @@ import calendar
 import uuid
 from .models import Achievement, Trade, Event
 from .forms import AchievementForm, EventForm, TradeForm, TradeFilterForm, CSVUploadForm
+from django.http import JsonResponse
 
+def keep_alive(request):
+    return JsonResponse({"status": "running"})
 @login_required
 def dashboard(request):
     # Check if this is an AJAX request for calendar data
