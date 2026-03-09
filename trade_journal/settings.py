@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-xlcnwqcm_rg*6jqdmx+pvsfjy&tj(o_jd+s^&9+(#epvq3#!ei'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
@@ -136,8 +136,6 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -161,11 +159,11 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-import cloudinary
 
-cloudinary.config(
-    cloud_name="dxlabyhqf",
-    api_key="811283514431511",
-    api_secret="F8WUykBmir5UcyfdtsLquodI_Y8",
-)
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": "dxlabyhqf",
+    "API_KEY": "811283514431511",
+    "API_SECRET": "F8WUykBmir5UcyfdtsLquodI_Y8",
+}
+
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
