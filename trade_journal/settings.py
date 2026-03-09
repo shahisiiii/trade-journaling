@@ -24,10 +24,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-xlcnwqcm_rg*6jqdmx+pvsfjy&tj(o_jd+s^&9+(#epvq3#!ei'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ["*"]
-
+ALLOWED_HOSTS = [
+    "trade-journaling.onrender.com",
+]
 
 # Application definition
 
