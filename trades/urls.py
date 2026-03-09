@@ -1,5 +1,7 @@
 from django.urls import path
 from . import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
@@ -30,3 +32,4 @@ urlpatterns = [
     path("keep-alive/", views.keep_alive, name="keep_alive"),
 ]
 
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
